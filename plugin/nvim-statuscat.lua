@@ -1,0 +1,1 @@
+require("nvim-statuscat").setup({})
