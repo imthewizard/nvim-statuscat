@@ -31,4 +31,25 @@ function M.get_buffer_percentage(win_id)
 	return (current_line / total_lines) * 100
 end
 
+---@return boolean supports # If there is vim.ui.img and if the terminal supports images
+---@return string? message # Error message, if supports is false
+function M.supports_img()
+	local term = string.lower(os.getenv("TERM"))
+
+	local supports = term == "wezterm" or term == "xterm-kitty" or term == "ghostty"
+	local has_vim_img = vim.ui.img
+
+	if supports and has_vim_img then return true, nil end
+
+	if supports and not has_vim_img then
+		return false, "Missing vim.ui.img, Neovim >= 0.13 is required!"
+	end
+
+	if not supports and has_vim_img then
+		return false, "Missing image support for the terminal. Use WezTerm, Kitty or Ghostty."
+	end
+
+	return false, "Missing both vim.ui.img and image support for the terminal. Upgrade Neovim to >= 0.13 and use WezTerm, Kitty or Ghostty."
+end
+
 return M

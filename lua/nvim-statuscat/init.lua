@@ -42,7 +42,13 @@ local default_config = {
 function M.setup(opts)
 	opts = vim.tbl_deep_extend("force", default_config, opts or {})
 
-	require("nvim-statuscat.render").start_rendering(opts)
+	local supports, msg = require("nvim-statuscat.utils").supports_img()
+
+	if supports then
+		require("nvim-statuscat.render").start_rendering(opts)
+	else
+		vim.notify("nvim-statuscat: "..msg, vim.log.levels.ERROR)
+	end
 end
 
 return M
