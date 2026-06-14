@@ -1,5 +1,7 @@
 local M = {}
 
+local timer = vim.uv.new_timer()
+
 ---@param opts NvimStatusCatConfig
 function M.start_rendering(opts)
 	local cur_win = vim.api.nvim_get_current_win()
@@ -33,6 +35,13 @@ function M.start_rendering(opts)
 			images.delete_win(win_id)
 		end,
 	})
+
+	if #opts.foreground_img_path > 1 then
+		timer:start(0, (1000 / opts.fps), vim.schedule_wrap(function()
+			images.next_frame()
+			images.update_all_windows()
+		end))
+	end
 end
 
 return M

@@ -11,16 +11,43 @@ local loaded_foregrounds = {}
 
 ---@type string
 local background_img = ""
----@type string
-local foreground_img = ""
+---@type string[]
+local foreground_imgs = {}
 ---@type string
 local progress_img = ""
+
+local next_frame = 1
+local max_frames = nil
 
 ---@type NvimStatusCatConfig
 local loaded_opts = nil
 
 local function win_has_required_width(win_width)
 	return win_width >= loaded_opts.min_window_width
+end
+
+local function create_background(win_id, row, col)
+	local new_id = vim.ui.img.set(
+		background_img,
+		{ row = row, col = col, width = loaded_opts.width, height = loaded_opts.height, zindex=1}
+	)
+	table.insert(loaded_backgrounds[win_id], new_id)
+end
+
+local function create_progress_bar(win_id, row, col)
+	local new_id = vim.ui.img.set(
+		progress_img,
+		{ row = row, col = col, width = loaded_opts.width, height = loaded_opts.height, zindex=2}
+	)
+	table.insert(loaded_progress_bars[win_id], new_id)
+end
+
+local function create_foreground(win_id, row, col)
+	local new_id = vim.ui.img.set(
+		foreground_imgs[next_frame],
+		{ row = row, col = col, width = loaded_opts.foreground_width, height = loaded_opts.height, zindex=3}
+	)
+	table.insert(loaded_foregrounds[win_id], new_id)
 end
 
 local function new_imgs_for_win(win_id)
@@ -36,8 +63,6 @@ local function new_imgs_for_win(win_id)
 	if not win_has_required_width(win_width) then return end
 
 	local img_width = loaded_opts.width
-	local fore_img_width = loaded_opts.foreground_width
-	local img_height = loaded_opts.height
 
 	local img_start_pos = (win_width * loaded_opts.position)
 	local row_pos = pos[1] + win_height + 1
@@ -47,12 +72,7 @@ local function new_imgs_for_win(win_id)
 	loaded_backgrounds[win_id] = {}
 	for i = 1, bars_per_window do
 		local offset = math.floor((i - (bars_per_window / 2)) * img_width)
-
-		local new_img = vim.ui.img.set(
-			background_img,
-			{ row = row_pos, col = col_pos + offset, width = img_width, height = img_height, zindex=1}
-		)
-		table.insert(loaded_backgrounds[win_id], new_img)
+		create_background(win_id, row_pos, col_pos + offset)
 	end
 
 	-- Windows will only have the needed progress bars and foregrounds
@@ -62,17 +82,9 @@ local function new_imgs_for_win(win_id)
 		local offset = math.floor((i - (bars_per_window / 2)) * img_width)
 
 		if (i < completed_bars) then
-			local new_img = vim.ui.img.set(
-				progress_img,
-				{ row = row_pos, col = col_pos + offset, width = img_width, height = img_height, zindex=2}
-			)
-			table.insert(loaded_progress_bars[win_id], new_img)
+			create_progress_bar(win_id, row_pos, col_pos + offset)
 		elseif (i == completed_bars) then
-			local new_img = vim.ui.img.set(
-				foreground_img,
-				{ row = row_pos, col = col_pos + offset, width = fore_img_width, height = img_height, zindex=3}
-			)
-			table.insert(loaded_foregrounds[win_id], new_img)
+			create_foreground(win_id, row_pos, col_pos + offset)
 		end
 	end
 end
@@ -81,8 +93,19 @@ end
 function M.init(opts)
 	loaded_opts = opts
 	progress_img = vim.fn.readblob(opts.progress_img_path)
-	foreground_img = vim.fn.readblob(opts.foreground_img_path)
 	background_img = vim.fn.readblob(opts.background_img_path)
+
+	local amount_of_fgs = #opts.foreground_img_path
+	max_frames = amount_of_fgs
+	if amount_of_fgs > 1 then
+		-- Animated
+		for i = 1, amount_of_fgs do
+			table.insert(foreground_imgs, vim.fn.readblob(opts.foreground_img_path[i]))
+		end
+	else
+		-- Static
+		foreground_imgs = {vim.fn.readblob(opts.foreground_img_path[1])}
+	end
 end
 
 function M.delete_win(win_id)
@@ -110,7 +133,16 @@ end
 
 function M.update_all_windows()
 	for _, win_id in pairs (vim.api.nvim_list_wins()) do
-		M.update_win(win_id)
+		if require("nvim-statuscat.utils").is_window_normal(win_id) then
+			M.update_win(win_id)
+		end
+	end
+end
+
+function M.next_frame()
+	if max_frames > 1 then
+		next_frame = next_frame + 1
+		if next_frame > max_frames then next_frame = 1 end
 	end
 end
 
