@@ -2,6 +2,10 @@ local M = {}
 
 local bars_per_window = 15
 
+---List of window ids
+---@type integer[]
+local tracked_windows = {}
+
 ---@type table<number, number[]>
 local loaded_backgrounds = {}
 ---@type table<number, number[]>
@@ -50,6 +54,24 @@ local function create_foreground(win_id, row, col)
 	table.insert(loaded_foregrounds[win_id], new_id)
 end
 
+local function clear_win(win_id)
+	if loaded_backgrounds[win_id] then
+		for _, img_id in pairs(loaded_backgrounds[win_id]) do
+			vim.ui.img.del(img_id)
+		end
+	end
+	if loaded_progress_bars[win_id] then
+		for _, img_id in pairs(loaded_progress_bars[win_id]) do
+			vim.ui.img.del(img_id)
+		end
+	end
+	if loaded_foregrounds[win_id] then
+		for _, img_id in pairs(loaded_foregrounds[win_id]) do
+			vim.ui.img.del(img_id)
+		end
+	end
+end
+
 local function new_imgs_for_win(win_id)
 	assert(loaded_opts ~= nil, "Forgot to init images.lua")
 
@@ -85,6 +107,7 @@ local function new_imgs_for_win(win_id)
 			create_progress_bar(win_id, row_pos, col_pos + offset)
 		elseif (i == completed_bars) then
 			create_foreground(win_id, row_pos, col_pos + offset)
+			return
 		end
 	end
 end
@@ -108,34 +131,28 @@ function M.init(opts)
 	end
 end
 
+function M.track_win(win_id)
+	table.insert(tracked_windows, win_id)
+end
+
 function M.delete_win(win_id)
-	if loaded_backgrounds[win_id] then
-		for _, img_id in pairs(loaded_backgrounds[win_id]) do
-			vim.ui.img.del(img_id)
-		end
-	end
-	if loaded_progress_bars[win_id] then
-		for _, img_id in pairs(loaded_progress_bars[win_id]) do
-			vim.ui.img.del(img_id)
-		end
-	end
-	if loaded_foregrounds[win_id] then
-		for _, img_id in pairs(loaded_foregrounds[win_id]) do
-			vim.ui.img.del(img_id)
+	clear_win(win_id)
+	for i, v in pairs(tracked_windows) do
+		if v == win_id then
+			table.remove(tracked_windows, i)
+			return
 		end
 	end
 end
 
 function M.update_win(win_id)
-	M.delete_win(win_id)
+	clear_win(win_id)
 	new_imgs_for_win(win_id)
 end
 
 function M.update_all_windows()
-	for _, win_id in pairs (vim.api.nvim_list_wins()) do
-		if require("nvim-statuscat.utils").is_window_normal(win_id) then
-			M.update_win(win_id)
-		end
+	for _, win_id in pairs (tracked_windows) do
+		M.update_win(win_id)
 	end
 end
 
