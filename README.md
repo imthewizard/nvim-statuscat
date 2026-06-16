@@ -19,6 +19,7 @@ require("nvim-statuscat").setup(opts)
 ---@field width integer Width of the progress bar and background images.
 ---@field height integer Height of the images.
 ---@field min_window_width integer If the window width is less than this, don't render there.
+---@field bar_length_per_window integer The length of the bar rendered in the window.
 ---@field position number Number between 0 and 1. 0 being the left of the statusline and 1 the right.
 ---@field background_img_path string Path to the image that will be used as the background.
 ---@field progress_img_path string Path to the image that will be used as the progress bar.
@@ -31,6 +32,7 @@ local default_config = {
 
 	min_window_width = 80,
 
+	bar_length_per_window = 15,
 	position = 0.5,
 
 	background_img_path = assets_dir.."/outerspace.png",

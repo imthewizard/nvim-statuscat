@@ -1,7 +1,5 @@
 local M = {}
 
-local bars_per_window = 15
-
 ---@type integer[] List of window ids
 local tracked_windows = {}
 
@@ -91,8 +89,9 @@ local function redraw_win_images(win_id)
 
 	if not has_required_width(win_width) then return end
 
+	local bar_length = loaded_opts.bar_length_per_window
 	local win_percentage = require("nvim-statuscat.utils").get_buffer_percentage(win_id)
-	local completed_bars = math.floor(win_percentage / 100 * bars_per_window)
+	local completed_bars = math.floor(win_percentage / 100 * bar_length)
 
 	local pos = vim.api.nvim_win_get_position(win_id)
 	local img_width = loaded_opts.width
@@ -103,16 +102,16 @@ local function redraw_win_images(win_id)
 
 	-- All windows will one background image in every position
 	loaded_backgrounds[win_id] = {}
-	for i = 1, bars_per_window do
-		local offset = math.floor((i - (bars_per_window / 2)) * img_width)
+	for i = 1, bar_length do
+		local offset = math.floor((i - (bar_length / 2)) * img_width)
 		create_background(win_id, row_pos, col_pos + offset)
 	end
 
 	-- Windows will only have the needed progress bars and foregrounds
 	loaded_progress_bars[win_id] = {}
 	loaded_foregrounds[win_id] = {}
-	for i = 1, bars_per_window do
-		local offset = math.floor((i - (bars_per_window / 2)) * img_width)
+	for i = 1, bar_length do
+		local offset = math.floor((i - (bar_length / 2)) * img_width)
 
 		if (i < completed_bars) then
 			create_progress_bar(win_id, row_pos, col_pos + offset)
