@@ -15,15 +15,15 @@ require("nvim-statuscat").setup(opts)
 
 ```lua
 ---@class NvimStatusCatConfig
----@field foreground_width number Width of the foreground image.
----@field width number Width of the other images.
----@field height number Height of the images.
----@field min_window_width number If the window width is less than this, don't create images there.
+---@field foreground_width integer Width of the foreground image.
+---@field width integer Width of the progress bar and background images.
+---@field height integer Height of the images.
+---@field min_window_width integer If the window width is less than this, don't render there.
 ---@field position number Number between 0 and 1. 0 being the left of the statusline and 1 the right.
 ---@field background_img_path string Path to the image that will be used as the background.
 ---@field progress_img_path string Path to the image that will be used as the progress bar.
 ---@field foreground_img_path string[] Path to the image(s) that will be used as the foreground.
----@field fps number? Frames per second if you have an animated foreground. Irrelevant otherwise.
+---@field fps integer? Frames per second if you have an animated foreground. Irrelevant otherwise.
 local default_config = {
 	foreground_width = 4,
 	width = 2,
