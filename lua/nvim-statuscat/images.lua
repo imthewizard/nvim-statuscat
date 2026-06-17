@@ -74,7 +74,7 @@ local function redraw_win_images(win_id)
 
 	if not has_required_width(win_width) then return end
 
-	local bar_length = loaded_opts.bar_length_per_window
+	local bar_length = loaded_opts.bar_length
 	local win_percentage = utils.get_buffer_percentage(win_id)
 	local completed_bars = math.floor(win_percentage / 100 * bar_length)
 
@@ -83,7 +83,7 @@ local function redraw_win_images(win_id)
 
 	local row_pos = pos[1] + win_height + 1 -- Should be the statusline row
 	local bar_center = pos[2] + (win_width * loaded_opts.position) -- Center of the bar
-	local bar_left = bar_center - img_width * loaded_opts.bar_length_per_window / 2
+	local bar_left = bar_center - img_width * bar_length / 2
 
 	loaded_backgrounds[win_id] = {}
 	local background_id = vim.ui.img.set(
