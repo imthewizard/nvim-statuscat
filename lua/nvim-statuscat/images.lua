@@ -44,18 +44,40 @@ local function clear_win(win_id)
 	end
 end
 
+---Clear all the backgrounds, progress bars and foregrounds
+local function clear_all_wins()
+	for win_id, _ in pairs(loaded_backgrounds) do
+		vim.ui.img.del(loaded_backgrounds[win_id][1])
+	end
+	for win_id, _ in pairs(loaded_progress_bars) do
+		vim.ui.img.del(loaded_progress_bars[win_id][1])
+	end
+	for win_id, _ in pairs(loaded_foregrounds) do
+		vim.ui.img.del(loaded_foregrounds[win_id][1])
+	end
+end
+
 ---Redraws the background, progress and foreground images for the specified window
 local function redraw_win_images(win_id)
-	local win_width = vim.api.nvim_win_get_width(win_id)
-	local win_height = vim.api.nvim_win_get_height(win_id)
+	local utils = require("nvim-statuscat.utils")
+
+	local pos, win_width, win_height
+	if utils.has_global_statusline() then
+		win_width = vim.o.columns
+		win_height = vim.o.lines - 1 - vim.o.cmdheight
+		pos = {0, 0}
+	else
+		win_width = vim.api.nvim_win_get_width(win_id)
+		win_height = vim.api.nvim_win_get_height(win_id)
+		pos = vim.api.nvim_win_get_position(win_id)
+	end
 
 	if not has_required_width(win_width) then return end
 
 	local bar_length = loaded_opts.bar_length_per_window
-	local win_percentage = require("nvim-statuscat.utils").get_buffer_percentage(win_id)
+	local win_percentage = utils.get_buffer_percentage(win_id)
 	local completed_bars = math.floor(win_percentage / 100 * bar_length)
 
-	local pos = vim.api.nvim_win_get_position(win_id)
 	local img_width = loaded_opts.width
 	local img_height = loaded_opts.height
 
@@ -137,14 +159,22 @@ end
 ---Clears the window's images and redraws it
 ---@param win_id integer # Window id
 function M.update_win(win_id)
-	clear_win(win_id)
+	if require("nvim-statuscat.utils").has_global_statusline() then
+		clear_all_wins()
+	else
+		clear_win(win_id)
+	end
 	redraw_win_images(win_id)
 end
 
 ---Calls update_win for every tracked window
 function M.update_all_windows()
-	for _, win_id in pairs (tracked_windows) do
-		M.update_win(win_id)
+	if require("nvim-statuscat.utils").has_global_statusline() then
+		M.update_win(vim.api.nvim_get_current_win())
+	else
+		for _, win_id in pairs (tracked_windows) do
+			M.update_win(win_id)
+		end
 	end
 end
 

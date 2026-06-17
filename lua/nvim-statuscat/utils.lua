@@ -22,6 +22,7 @@ function M.is_window_normal(win_id)
 	return true
 end
 
+---@return number # Percentage of position inside buffer (0 for top, 100 for bottom)
 function M.get_buffer_percentage(win_id)
 	local current_line = vim.api.nvim_win_get_cursor(win_id)[1]
 	local total_lines = vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(win_id))
@@ -29,6 +30,11 @@ function M.get_buffer_percentage(win_id)
 	if total_lines == 0 then return 0 end
 
 	return (current_line / total_lines) * 100
+end
+
+---@return boolean # If the user has a global statusline instead of 1 per window
+function M.has_global_statusline()
+	return vim.o.laststatus == 3;
 end
 
 ---@return boolean supports # If there is vim.ui.img and if the terminal supports images
