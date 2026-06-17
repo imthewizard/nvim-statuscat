@@ -42,7 +42,7 @@ function M.start_rendering(opts)
 			images.update_all_windows()
 		end))
 	else
-		vim.api.nvim_create_autocmd({"CursorMoved", "TextChangedI"}, {
+		vim.api.nvim_create_autocmd({"CursorMoved"}, {
 			group = group,
 			callback = function()
 				local win_id = vim.api.nvim_get_current_win()
