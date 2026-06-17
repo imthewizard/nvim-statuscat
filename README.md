@@ -1,4 +1,6 @@
 # Statuscat
+![default configs example](./default.gif)
+
 Uses the experimental image api (vim.ui.img) to draw a buffer progress bar with images.
 By default, it comes with nyan cat assets, taken from nyan-mode for Emacs.
 
